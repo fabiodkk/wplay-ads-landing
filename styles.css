@@ -372,6 +372,14 @@ h3 {
   line-height: 1.2;
 }
 
+.confirmation .info-panel {
+  margin-top: 28px;
+}
+
+.confirmation .info-panel h2 {
+  margin-top: 0;
+}
+
 @media (max-width: 860px) {
   .topbar {
     align-items: flex-start;
