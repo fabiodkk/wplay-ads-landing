@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://fabiodkk.github.io/wplay-ads-landing/sitemap.xml
