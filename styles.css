@@ -103,7 +103,7 @@ a {
   inset: 0;
   background:
     linear-gradient(90deg, rgba(16, 21, 28, 0.91), rgba(16, 21, 28, 0.62) 48%, rgba(16, 21, 28, 0.22)),
-    url("assets/esporte.jpg") center / cover;
+    url("assets/hero-entertainment.jpg") center / cover;
   transform: scale(1.01);
 }
 
@@ -401,7 +401,7 @@ h3 {
   .hero-media {
     background:
       linear-gradient(180deg, rgba(16, 21, 28, 0.36), rgba(16, 21, 28, 0.9)),
-      url("assets/esporte.jpg") center / cover;
+      url("assets/hero-entertainment.jpg") center / cover;
   }
 
   h1 {
