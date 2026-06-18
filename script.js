@@ -9,6 +9,31 @@
 
   doc.classList.add("js-ready");
 
+  function preserveKirvanoTrackingParams() {
+    if (!window.location.search || window.location.search === "?") {
+      return;
+    }
+
+    var currentParams = new URLSearchParams(window.location.search);
+    if (!currentParams.toString()) {
+      return;
+    }
+
+    document.querySelectorAll('a[href*="kirvano"]').forEach(function (link) {
+      try {
+        var url = new URL(link.getAttribute("href"), window.location.href);
+        currentParams.forEach(function (value, key) {
+          if (!url.searchParams.has(key)) {
+            url.searchParams.set(key, value);
+          }
+        });
+        link.href = url.toString();
+      } catch (error) {
+        // Keep the original checkout link if the browser cannot parse it.
+      }
+    });
+  }
+
   function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value));
   }
@@ -240,6 +265,7 @@
   window.addEventListener("resize", updateProgress, { passive: true });
 
   revealOnScroll();
+  preserveKirvanoTrackingParams();
   setupCanvas();
   setupGsap();
   onScroll();
