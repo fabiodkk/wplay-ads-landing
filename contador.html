@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Contador | WPlay</title>
+  <meta name="robots" content="noindex,nofollow">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="analytics-page">
+  <header class="topbar">
+    <a class="brand" href="index.html" aria-label="WPlay - inicio">
+      <img src="assets/wplay-logo.jpg" alt="" width="44" height="44">
+      <span>WPlay</span>
+    </a>
+    <nav class="nav" aria-label="Navegacao principal">
+      <a href="index.html">Site</a>
+      <a href="obrigado.html">Obrigado</a>
+    </nav>
+  </header>
+
+  <main class="analytics-shell">
+    <section class="analytics-head">
+      <div>
+        <p class="eyebrow">Pagina obrigado</p>
+        <h1>Contador de acessos</h1>
+      </div>
+      <label class="analytics-select">
+        Periodo
+        <select id="daysSelect">
+          <option value="7">7 dias</option>
+          <option value="30" selected>30 dias</option>
+          <option value="90">90 dias</option>
+        </select>
+      </label>
+    </section>
+
+    <section class="metric-grid" aria-label="Metricas principais">
+      <article>
+        <span>Total</span>
+        <strong id="totalVisits">0</strong>
+        <small>visitas no periodo</small>
+      </article>
+      <article>
+        <span>Pessoas</span>
+        <strong id="totalVisitors">0</strong>
+        <small>visitantes unicos</small>
+      </article>
+      <article>
+        <span>Hoje</span>
+        <strong id="todayVisits">0</strong>
+        <small>visitas hoje</small>
+      </article>
+      <article>
+        <span>Atualizado</span>
+        <strong class="metric-time" id="updatedAt">--</strong>
+        <small>horario de Brasilia</small>
+      </article>
+    </section>
+
+    <section class="analytics-panel">
+      <div class="panel-heading">
+        <h2>Por dia</h2>
+        <span id="dailyRange">--</span>
+      </div>
+      <div class="bar-chart daily-chart" id="dailyChart"></div>
+    </section>
+
+    <section class="analytics-panel">
+      <div class="panel-heading">
+        <h2>Por horario</h2>
+        <span>00h a 23h</span>
+      </div>
+      <div class="bar-chart hourly-chart" id="hourlyChart"></div>
+    </section>
+
+    <section class="analytics-panel">
+      <div class="panel-heading">
+        <h2>Ultimos acessos</h2>
+        <span id="statusText">Carregando...</span>
+      </div>
+      <div class="analytics-table-wrap">
+        <table class="analytics-table">
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Hora</th>
+              <th>Visitante</th>
+              <th>Origem</th>
+            </tr>
+          </thead>
+          <tbody id="recentRows"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const API_URL = "https://wplay-teste-4h.onrender.com/api/obrigado-stats";
+    const formatNumber = new Intl.NumberFormat("pt-BR");
+
+    function setText(id, value) {
+      document.getElementById(id).textContent = value;
+    }
+
+    function renderBars(targetId, rows, labelKey) {
+      const target = document.getElementById(targetId);
+      const max = Math.max(1, ...rows.map((row) => row.visits));
+      target.innerHTML = rows.map((row) => {
+        const height = Math.max(4, Math.round((row.visits / max) * 100));
+        const label = row[labelKey];
+        return `
+          <div class="bar-item" title="${label}: ${row.visits} visitas">
+            <div class="bar-value">${row.visits || ""}</div>
+            <div class="bar-track"><span style="height:${height}%"></span></div>
+            <div class="bar-label">${label}</div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function cleanReferrer(referrer) {
+      if (!referrer) return "Direto";
+      try {
+        return new URL(referrer).hostname.replace(/^www\./, "");
+      } catch (error) {
+        return referrer.slice(0, 40);
+      }
+    }
+
+    function renderRecent(rows) {
+      const tbody = document.getElementById("recentRows");
+      if (!rows.length) {
+        tbody.innerHTML = '<tr><td colspan="4">Ainda sem acessos registrados.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = rows.map((row) => `
+        <tr>
+          <td>${row.date}</td>
+          <td>${row.time}</td>
+          <td>${row.visitor || "-"}</td>
+          <td>${cleanReferrer(row.referrer)}</td>
+        </tr>
+      `).join("");
+    }
+
+    async function loadStats() {
+      const days = document.getElementById("daysSelect").value;
+      setText("statusText", "Carregando...");
+      const response = await fetch(`${API_URL}?page=/obrigado&days=${days}`, { mode: "cors" });
+      if (!response.ok) throw new Error("Falha ao carregar contador");
+      const data = await response.json();
+      if (!data.ok) throw new Error(data.error || "Falha ao carregar contador");
+
+      setText("totalVisits", formatNumber.format(data.totals.visits));
+      setText("totalVisitors", formatNumber.format(data.totals.visitors));
+      setText("todayVisits", formatNumber.format(data.totals.today_visits));
+      setText("updatedAt", data.updated_at);
+      setText("dailyRange", `${data.days} dias`);
+      setText("statusText", `${data.recent.length} registros recentes`);
+
+      renderBars("dailyChart", data.daily, "label");
+      renderBars("hourlyChart", data.hourly, "label");
+      renderRecent(data.recent);
+    }
+
+    document.getElementById("daysSelect").addEventListener("change", () => {
+      loadStats().catch((error) => setText("statusText", error.message));
+    });
+
+    loadStats().catch((error) => setText("statusText", error.message));
+  </script>
+</body>
+</html>
